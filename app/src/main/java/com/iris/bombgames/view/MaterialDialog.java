@@ -191,7 +191,12 @@ public class MaterialDialog {
         mPositiveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                listener.onEditTextDismissListener((Integer.parseInt(mBuilder.mMessageView.getText().toString())));
+                if(mBuilder.mMessageView.getText().toString().equals("")) {
+                    listener.onEditTextDismissListener(-1);
+                }
+                else {
+                    listener.onEditTextDismissListener((Integer.parseInt(mBuilder.mMessageView.getText().toString())));
+                }
             }
         });
         if (isLollipop()) {
