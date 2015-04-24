@@ -25,7 +25,7 @@ public class BombView extends ImageView implements View.OnClickListener {
 
     private boolean mClickYn = false;
 
-    private int mBombImage = R.drawable.bomb;
+//    private int mBombImage = R.drawable.normal;
 
     private int mBombWidth = 0, mBombHeight = 0;
 
@@ -87,7 +87,7 @@ public class BombView extends ImageView implements View.OnClickListener {
 
         mBombHeight = mBombWidth = width/3;
 
-        setImageResource(mBombImage);
+//        setImageResource(mBombImage);
 
         this.setOnClickListener(this);
     }

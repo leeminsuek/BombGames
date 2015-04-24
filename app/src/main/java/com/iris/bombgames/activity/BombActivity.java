@@ -2,6 +2,8 @@ package com.iris.bombgames.activity;
 
 import android.animation.Animator;
 import android.app.Activity;
+import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.BitmapDrawable;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -20,6 +22,7 @@ import android.widget.Toast;
 
 
 import com.iris.bombgames.R;
+import com.iris.bombgames.listener.AnimationDrawbleListeneable;
 import com.iris.bombgames.view.BombView;
 import com.iris.bombgames.view.MaterialDialog;
 
@@ -36,16 +39,21 @@ public class BombActivity extends ActionBarActivity {
 
     private ArrayList<BombView> mBombData;
 
-    /***
+    private BitmapDrawable[] mNormalFrame = new BitmapDrawable[2];
+    private BitmapDrawable[] mBombFrame = new BitmapDrawable[2];
+
+    private AnimationDrawable mNormalAnim = new AnimationDrawable();
+    private AnimationDrawable mBombAnim = new AnimationDrawable();
+    /**
      * 폭탄 범위설정
      */
     private final int BOMB_PIXCEL = 6;
-    /***
+    /**
      * 한사람당 폭탄 갯수
      */
     private final int BOMB_CNT = 2;
 
-    /***
+    /**
      * 애니메이션 구분
      */
     private enum FADE_ANIMATION {
@@ -59,10 +67,11 @@ public class BombActivity extends ActionBarActivity {
         setContentView(R.layout.activity_bomb);
 
         initLayout();
+        initFrmae();
         initDialog();
     }
 
-    /***
+    /**
      * 다디알로그 초기화
      */
     private void initDialog() {
@@ -98,8 +107,10 @@ public class BombActivity extends ActionBarActivity {
             bombView = new BombView(this);
             if (i == (bombIndex)) {
                 bombView.setmBombYn(BombView.Bomb.BOMB);
+                bombView.setBackgroundDrawable(mBombAnim);
             } else {
                 bombView.setmBombYn(BombView.Bomb.NON_BOMB);
+                bombView.setBackgroundDrawable(mNormalAnim);
             }
             RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(bombView.getmBombHeight(), bombView.getmBombWidth());
 
@@ -127,7 +138,7 @@ public class BombActivity extends ActionBarActivity {
                         case BOMB:
                             Toast.makeText(getApplicationContext(), "폭탄!", Toast.LENGTH_LONG).show();
 //                            mLayout.removeView(view);
-                            for(BombView bombv : mBombData) {
+                            for (BombView bombv : mBombData) {
                                 bombv.setOnClickListener(null);
                             }
                             removeBomb(view, bomb);
@@ -152,6 +163,7 @@ public class BombActivity extends ActionBarActivity {
 
     /**
      * 게임종료 뷰 페이드 애니메이션
+     *
      * @param fadeAnimation
      */
     private void fadeTransView(final FADE_ANIMATION fadeAnimation) {
@@ -161,10 +173,9 @@ public class BombActivity extends ActionBarActivity {
         Animation alphaAnimation;
 
 
-        if(fadeAnimation == FADE_ANIMATION.FADE_IN) {
+        if (fadeAnimation == FADE_ANIMATION.FADE_IN) {
             alphaAnimation = new AlphaAnimation(0.0f, 1.0f);
-        }
-        else {
+        } else {
             alphaAnimation = new AlphaAnimation(1.0f, 0.0f);
         }
 
@@ -180,11 +191,10 @@ public class BombActivity extends ActionBarActivity {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                if(fadeAnimation == FADE_ANIMATION.FADE_IN) {
+                if (fadeAnimation == FADE_ANIMATION.FADE_IN) {
                     transView.setVisibility(View.VISIBLE);
                     transView.bringToFront();
-                }
-                else {
+                } else {
                     transView.setVisibility(View.GONE);
                 }
             }
@@ -201,32 +211,17 @@ public class BombActivity extends ActionBarActivity {
 
     /**
      * 폭탄 사라질때 애니메이션
+     *
      * @param view
      */
 
     private void removeBomb(final BombView view, final BombView.Bomb bomb) {
-        AnimationSet set = new AnimationSet(true);
-        Animation scaleAnimation, alphaAnimation;
-
-
-        scaleAnimation = new ScaleAnimation(0.8f, 1.5f, 0.8f, 1.5f);
-        scaleAnimation.setDuration(1000);
-        scaleAnimation.setFillAfter(true);
-        set.addAnimation(scaleAnimation);
-
-        alphaAnimation = new AlphaAnimation(1.0f, 0.0f);
-        alphaAnimation.setDuration(1000);
-        alphaAnimation.setFillAfter(true);
-        set.addAnimation(alphaAnimation);
-
-        set.setAnimationListener(new Animation.AnimationListener() {
+        AnimationDrawable anim = (AnimationDrawable) view.getBackground();
+        AnimationDrawbleListeneable cad = new AnimationDrawbleListeneable(
+                anim) {
             @Override
-            public void onAnimationStart(Animation animation) {
-
-            }
-
-            @Override
-            public void onAnimationEnd(Animation animation) {
+            public void onAnimationFinish() {
+                view.setImageBitmap(null);
                 mLayout.removeView(view);
                 mBombData.remove(view);
                 switch (bomb) {
@@ -235,16 +230,62 @@ public class BombActivity extends ActionBarActivity {
                         break;
                     case NON_BOMB:
                 }
-
             }
+        };
 
-            @Override
-            public void onAnimationRepeat(Animation animation) {
+        view.setBackgroundDrawable(cad);
+        cad.start();
 
-            }
-        });
+        AnimationSet set = new AnimationSet(true);
+        Animation alphaAnimation, scaleAnimation;
 
-        view.startAnimation(set);
+        switch (bomb) {
+            case BOMB:
+                scaleAnimation = new ScaleAnimation(1.0f, 1.5f, 1.0f, 1.5f);
+                scaleAnimation.setDuration(1000);
+                scaleAnimation.setFillAfter(true);
+                set.addAnimation(scaleAnimation);
+                view.startAnimation(set);
+                break;
+            case NON_BOMB:
+                alphaAnimation = new AlphaAnimation(1.0f, 0.0f);
+                alphaAnimation.setDuration(1000);
+                alphaAnimation.setFillAfter(true);
+                set.addAnimation(alphaAnimation);
+                view.startAnimation(set);
+                break;
+        }
+
+//
+
+//
+//        set.setAnimationListener(new Animation.AnimationListener() {
+//            @Override
+//            public void onAnimationStart(Animation animation) {
+//
+//            }
+//
+//            @Override
+//            public void onAnimationEnd(Animation animation) {
+//                view.setImageBitmap(null);
+//                mLayout.removeView(view);
+//                mBombData.remove(view);
+//                switch (bomb) {
+//                    case BOMB:
+//                        fadeTransView(FADE_ANIMATION.FADE_IN);
+//                        break;
+//                    case NON_BOMB:
+//                }
+//
+//            }
+//
+//            @Override
+//            public void onAnimationRepeat(Animation animation) {
+//
+//            }
+//        });
+//
+
     }
 
     /**
@@ -257,8 +298,29 @@ public class BombActivity extends ActionBarActivity {
         mRestartBtn.setOnClickListener(mRestartBtnListener);
     }
 
+    /**
+     * 애니메이션 초기화
+     */
+    private void initFrmae() {
+        mNormalFrame[0] = (BitmapDrawable) getResources().getDrawable(R.drawable.normal);
+        mNormalFrame[1] = (BitmapDrawable) getResources().getDrawable(R.drawable.good);
 
-    /***
+        mBombFrame[0] = (BitmapDrawable) getResources().getDrawable(R.drawable.normal);
+        mBombFrame[1] = (BitmapDrawable) getResources().getDrawable(R.drawable.bad);
+
+        for (BitmapDrawable drawable : mNormalFrame) {
+            mNormalAnim.addFrame(drawable, 200);
+        }
+
+        for (BitmapDrawable drawable : mBombFrame) {
+            mBombAnim.addFrame(drawable, 200);
+        }
+
+        mBombAnim.setOneShot(true);
+        mNormalAnim.setOneShot(true);
+    }
+
+    /**
      * 모든 폭탄 지우기
      */
     private void removeAllBomb() {
@@ -266,7 +328,7 @@ public class BombActivity extends ActionBarActivity {
         mBombData.clear();
     }
 
-    /***
+    /**
      * 재시작 버튼 리스너
      */
     private View.OnClickListener mRestartBtnListener = new View.OnClickListener() {
