@@ -334,10 +334,11 @@ public class BombActivity extends ActionBarActivity {
     private View.OnClickListener mRestartBtnListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            removeAllBomb();
+            finish();
+//            removeAllBomb();
 //            RelativeLayout transView = (RelativeLayout) findViewById(R.id.main_trans_view);
-            fadeTransView(FADE_ANIMATION.FADE_OUT);
-            mDialog.show();
+//            fadeTransView(FADE_ANIMATION.FADE_OUT);
+//            mDialog.show();
         }
     };
 
